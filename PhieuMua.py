@@ -266,8 +266,9 @@ class SalesForm(QWidget):
 
     def connect_db(self):
         try:
-            dsn = cx_Oracle.makedsn("localhost", 1521, service_name="XE")
-            connection = cx_Oracle.connect(user="sys", password="theanh2301", dsn=dsn, mode=cx_Oracle.SYSDBA)
+            # Kết nối đến Oracle Database
+            dsn = cx_Oracle.makedsn("localhost", 1521, service_name="XEPDB1")
+            connection = cx_Oracle.connect(user="truyenadmin", password="theanh2301", dsn=dsn)
             return connection
         except cx_Oracle.DatabaseError as e:
             QMessageBox.critical(self, "Lỗi kết nối", f"Không thể kết nối đến Oracle Database: {str(e)}")
@@ -468,7 +469,7 @@ class SalesForm(QWidget):
             # Tạo mã hóa đơn
             cursor.execute("SELECT NVL(MAX(SUBSTR(MaHD, 3)), 0) + 1 FROM HoaDon WHERE MaHD LIKE 'HD%'")
             next_id = cursor.fetchone()[0]
-            ma_hd = f"HD{next_id:06d}"
+            ma_hd = f"HD{next_id:04d}"
 
             # Tính tổng tiền
             tong_tien = self.calculate_total()
@@ -520,7 +521,7 @@ class SalesForm(QWidget):
 
                 # Cập nhật số lượng truyện
                 cursor.execute("""
-                    UPDATE Truyen SET SoLuong = SoLuong - :soluong 
+                    UPDATE Truyen SET SoLuong = SoLuong - :soluong
                     WHERE MaTruyen = :matruyen
                 """, {
                     'soluong': item['SoLuong'],

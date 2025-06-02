@@ -45,7 +45,7 @@ class AddEditTruyenDialog(QDialog):
 
         if truyen:
             self.input_matruyen.setText(str(truyen["MaTruyen"]))
-            self.input_matruyen.setReadOnly(True)  # Không cho phép sửa mã truyện khi edit
+            self.input_matruyen.setReadOnly(True)
             self.input_tentruyen.setText(truyen["TenTruyen"] or "")
             self.input_theloai.setText(truyen["TheLoai"] or "")
             self.input_tacgia.setText(truyen["TacGia"] or "")
@@ -197,8 +197,8 @@ class TruyenManager(QWidget):
     def connect_db(self):
         try:
             # Kết nối đến Oracle Database
-            dsn = cx_Oracle.makedsn("localhost", 1521, service_name="XE")  # Thay đổi service_name nếu cần
-            connection = cx_Oracle.connect(user="sys", password="theanh2301", dsn=dsn, mode=cx_Oracle.SYSDBA)
+            dsn = cx_Oracle.makedsn("localhost", 1521, service_name="XEPDB1")  # Thay đổi service_name nếu cần
+            connection = cx_Oracle.connect(user="truyenadmin", password="theanh2301", dsn=dsn)
             return connection
         except cx_Oracle.DatabaseError as e:
             QMessageBox.critical(self, "Lỗi kết nối", f"Không thể kết nối đến Oracle Database: {str(e)}")

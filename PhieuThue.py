@@ -77,14 +77,16 @@ class RentalDetailDialog(QDialog):
 
     def connect_db(self):
         try:
-            dsn = cx_Oracle.makedsn("localhost", 1521, service_name="XE")
-            connection = cx_Oracle.connect(user="sys", password="theanh2301", dsn=dsn, mode=cx_Oracle.SYSDBA)
+            # Kết nối đến Oracle Database
+            dsn = cx_Oracle.makedsn("localhost", 1521, service_name="XEPDB1")  # Thay đổi service_name nếu cần
+            connection = cx_Oracle.connect(user="truyenadmin", password="theanh2301", dsn=dsn)
             return connection
         except cx_Oracle.DatabaseError as e:
             QMessageBox.critical(self, "Lỗi kết nối", f"Không thể kết nối đến Oracle Database: {str(e)}")
             return None
 
     def load_rental_details(self):
+        conn = None
         try:
             conn = self.connect_db()
             if conn is None:
@@ -99,7 +101,6 @@ class RentalDetailDialog(QDialog):
             """
             cursor.execute(query, mapt=self.rental_data['MaPT'])
             details = cursor.fetchall()
-            conn.close()
 
             self.detail_table.setRowCount(len(details))
             for row_idx, row_data in enumerate(details):
@@ -112,6 +113,11 @@ class RentalDetailDialog(QDialog):
 
         except cx_Oracle.DatabaseError as e:
             QMessageBox.critical(self, "Lỗi", f"Không thể tải chi tiết phiếu thuê: {str(e)}")
+        except Exception as e:
+            QMessageBox.critical(self, "Lỗi", f"Lỗi không xác định: {str(e)}")
+        finally:
+            if conn:
+                conn.close()
 
 
 class RentalForm(QWidget):
@@ -277,8 +283,9 @@ class RentalForm(QWidget):
 
     def connect_db(self):
         try:
-            dsn = cx_Oracle.makedsn("localhost", 1521, service_name="XE")
-            connection = cx_Oracle.connect(user="sys", password="theanh2301", dsn=dsn, mode=cx_Oracle.SYSDBA)
+            # Kết nối đến Oracle Database
+            dsn = cx_Oracle.makedsn("localhost", 1521, service_name="XEPDB1")  # Thay đổi service_name nếu cần
+            connection = cx_Oracle.connect(user="truyenadmin", password="theanh2301", dsn=dsn)
             return connection
         except cx_Oracle.DatabaseError as e:
             QMessageBox.critical(self, "Lỗi kết nối", f"Không thể kết nối đến Oracle Database: {str(e)}")
@@ -286,6 +293,7 @@ class RentalForm(QWidget):
 
     def load_books(self):
         """Tải danh sách truyện"""
+        conn = None
         try:
             conn = self.connect_db()
             if conn is None:
@@ -300,7 +308,6 @@ class RentalForm(QWidget):
             """
             cursor.execute(query)
             books = cursor.fetchall()
-            conn.close()
 
             self.books_table.setRowCount(len(books))
             for row_idx, row_data in enumerate(books):
@@ -313,6 +320,11 @@ class RentalForm(QWidget):
 
         except cx_Oracle.DatabaseError as e:
             QMessageBox.critical(self, "Lỗi", f"Không thể tải danh sách truyện: {str(e)}")
+        except Exception as e:
+            QMessageBox.critical(self, "Lỗi", f"Lỗi không xác định: {str(e)}")
+        finally:
+            if conn:
+                conn.close()
 
     def search_books(self):
         """Tìm kiếm truyện"""
@@ -321,6 +333,7 @@ class RentalForm(QWidget):
             self.load_books()
             return
 
+        conn = None
         try:
             conn = self.connect_db()
             if conn is None:
@@ -339,7 +352,6 @@ class RentalForm(QWidget):
             """
             cursor.execute(query, keyword=f"%{keyword}%")
             books = cursor.fetchall()
-            conn.close()
 
             self.books_table.setRowCount(len(books))
             for row_idx, row_data in enumerate(books):
@@ -352,6 +364,11 @@ class RentalForm(QWidget):
 
         except cx_Oracle.DatabaseError as e:
             QMessageBox.critical(self, "Lỗi", f"Lỗi tìm kiếm: {str(e)}")
+        except Exception as e:
+            QMessageBox.critical(self, "Lỗi", f"Lỗi không xác định: {str(e)}")
+        finally:
+            if conn:
+                conn.close()
 
     def add_to_cart(self):
         """Thêm truyện vào giỏ hàng"""
@@ -445,17 +462,19 @@ class RentalForm(QWidget):
             return
 
         # Kiểm tra ngày hợp lệ
-        rental_date = self.rental_date.date().toPython()
-        return_date = self.return_date.date().toPython()
+        rental_date = self.rental_date.date().toPyDate()
+        return_date = self.return_date.date().toPyDate()
 
         if return_date <= rental_date:
             QMessageBox.warning(self, "Lỗi", "Hạn trả phải sau ngày thuê!")
             return
 
+        conn = None
         try:
             conn = self.connect_db()
             if conn is None:
                 return
+
             cursor = conn.cursor()
 
             # Kiểm tra xem khách hàng có tồn tại không
@@ -484,10 +503,10 @@ class RentalForm(QWidget):
                     else:
                         raise e
 
-            # Tạo mã phiếu thuê
+            # Tạo mã phiếu thu
             cursor.execute("SELECT NVL(MAX(SUBSTR(MaPT, 3)), 0) + 1 FROM PhieuThue WHERE MaPT LIKE 'PT%'")
             next_id = cursor.fetchone()[0]
-            ma_pt = f"PT{next_id:06d}"
+            ma_pt = f"PT{next_id:02d}"
 
             # Thêm phiếu thuê
             cursor.execute("""
@@ -498,7 +517,7 @@ class RentalForm(QWidget):
                 'makh': customer_id,
                 'ngaythue': rental_date,
                 'hantra': return_date,
-                'datra': 0  # Chưa trả
+                'datra': 0
             })
 
             # Thêm chi tiết phiếu thuê và cập nhật số lượng
@@ -542,7 +561,6 @@ class RentalForm(QWidget):
                 })
 
             conn.commit()
-            conn.close()
 
             tong_tien = self.calculate_total()
             QMessageBox.information(self, "Thành công", f"Tạo phiếu thuê thành công!\nMã phiếu thuê: {ma_pt}")
@@ -576,13 +594,18 @@ class RentalForm(QWidget):
         except cx_Oracle.DatabaseError as e:
             if conn:
                 conn.rollback()
-                conn.close()
-            QMessageBox.critical(self, "Lỗi Database", f"Lỗi tạo phiếu thuê: {str(e)}")
+            error_msg = f"Lỗi Database: {str(e)}"
+            print(error_msg)  # In ra console để debug
+            QMessageBox.critical(self, "Lỗi Database", error_msg)
         except Exception as e:
             if conn:
                 conn.rollback()
+            error_msg = f"Lỗi không xác định: {str(e)}"
+            print(error_msg)  # In ra console để debug
+            QMessageBox.critical(self, "Lỗi", error_msg)
+        finally:
+            if conn:
                 conn.close()
-            QMessageBox.critical(self, "Lỗi", f"Lỗi không xác định: {str(e)}")
 
 
 if __name__ == "__main__":

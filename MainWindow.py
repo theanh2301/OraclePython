@@ -6,7 +6,7 @@ import sys
 from KhachHang import ClientManager
 from PhieuMua import SalesForm
 from PhieuThue import RentalForm
-from PhieuTra import PhieuTraManager
+from PhieuTra import PhieuMuonManager
 from ThongKeDoanhThu import RevenueStatistics
 from ThongKeKhachHang import CustomerStatistics
 
@@ -120,7 +120,7 @@ class MainWindow(QWidget):
                 elif page_name == "PhieuThue":
                     self.pages[page_name] = RentalForm()
                 elif page_name == "PhieuTra":
-                    self.pages[page_name] = PhieuTraManager()
+                    self.pages[page_name] = PhieuMuonManager()
                 elif page_name == "ThongKeDoanhThu":
                     self.pages[page_name] = RevenueStatistics()
                 elif page_name == "ThongKeKhachHang":

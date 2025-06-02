@@ -161,8 +161,8 @@ class ClientManager(QWidget):
     def connect_db(self):
         try:
             # Kết nối đến Oracle Database
-            dsn = cx_Oracle.makedsn("localhost", 1521, service_name="XE")  # Thay đổi service_name nếu cần
-            connection = cx_Oracle.connect(user="sys", password="theanh2301", dsn=dsn, mode=cx_Oracle.SYSDBA)
+            dsn = cx_Oracle.makedsn("localhost", 1521, service_name="XEPDB1")  # Thay đổi service_name nếu cần
+            connection = cx_Oracle.connect(user="truyenadmin", password="theanh2301", dsn=dsn)
             return connection
         except cx_Oracle.DatabaseError as e:
             QMessageBox.critical(self, "Lỗi kết nối", f"Không thể kết nối đến Oracle Database: {str(e)}")
@@ -203,7 +203,11 @@ class ClientManager(QWidget):
             if conn is None:
                 return
             cursor = conn.cursor()
-            query = "SELECT MaKH, TenKH, SdtKH, DiaChi, GmailKH FROM KhachHang WHERE UPPER(MaKH) LIKE UPPER(:keyword) OR UPPER(TenKH) LIKE UPPER(:keyword) OR UPPER(DiaChi) LIKE UPPER(:keyword)"
+            query = ("SELECT MaKH, TenKH, SdtKH, DiaChi, GmailKH "
+                     "FROM KhachHang "
+                     "WHERE UPPER(MaKH) LIKE UPPER(:keyword) "
+                     "OR UPPER(TenKH) LIKE UPPER(:keyword) "
+                     "OR UPPER(DiaChi) LIKE UPPER(:keyword)")
             cursor.execute(query, keyword=f"%{keyword}%")
             data = cursor.fetchall()
             conn.close()

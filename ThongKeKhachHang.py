@@ -142,8 +142,8 @@ class CustomerStatistics(QWidget):
     def connect_db(self):
         try:
             # Kết nối đến Oracle Database
-            dsn = cx_Oracle.makedsn("localhost", 1521, service_name="XE")
-            connection = cx_Oracle.connect(user="sys", password="theanh2301", dsn=dsn, mode=cx_Oracle.SYSDBA)
+            dsn = cx_Oracle.makedsn("localhost", 1521, service_name="XEPDB1")  # Thay đổi service_name nếu cần
+            connection = cx_Oracle.connect(user="truyenadmin", password="theanh2301", dsn=dsn)
             return connection
         except cx_Oracle.DatabaseError as e:
             QMessageBox.critical(self, "Lỗi kết nối", f"Không thể kết nối đến Oracle Database: {str(e)}")
@@ -242,11 +242,9 @@ class CustomerStatistics(QWidget):
         """Đổ dữ liệu vào bảng"""
         self.table.setRowCount(len(data))
         for row_idx, row_data in enumerate(data):
-            # row_data có 7 cột: [MaKH, TenKH, SoLuongMua, TongTienMua, SoLuongThue, TongTienThue, PhanLoai]
-            # Bảng có 8 cột: [Mã KH, Tên KH, SL Mua, Tiền Mua, SL Thuê, Tiền Thuê, Tổng Chi Tiêu, Phân Loại]
 
-            for col_idx in range(8):  # 8 cột trong bảng
-                if col_idx < 6:  # 6 cột đầu từ database
+            for col_idx in range(8):
+                if col_idx < 6:
                     value = row_data[col_idx] if col_idx < len(row_data) else None
                     if col_idx in [2, 3, 4, 5]:  # Các cột số lượng và tiền
                         display_value = f"{value:,}" if value is not None else "0"
